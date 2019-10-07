@@ -1,0 +1,6 @@
+venv/
+.venv/
+creds.txt
+.vscode/
+.mypy_cache/
+__pycache__/
