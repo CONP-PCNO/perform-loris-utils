@@ -5,7 +5,7 @@ from .Visit import Visit
 class Candidate:
     def __init__(self, id):
         self.id = id
-        self.info = None
+        self.meta = None
         self.visits = []
 
     @property
@@ -13,8 +13,8 @@ class Candidate:
         return self.id
 
     @property
-    def get_info(self):
-        return self.info
+    def get_meta(self):
+        return self.meta
 
     @property
     def get_visits(self):
@@ -22,10 +22,14 @@ class Candidate:
 
     def collect_data(self, api_url, header):
         api_url += f"/candidates/{self.id}"
-        self.info = get_request(url=api_url, headers=header)
+        self.meta = get_request(url=api_url, headers=header)
 
-        for visit_id in self.info["Visits"]:
+        for visit_id in self.meta["Visits"]:
             visit = Visit(visit_id)
             self.visits.append(visit)
 
             visit.collect_data(api_url, header=header)
+
+    def save_data(self, path):
+        for visit in self.visits:
+            visit.save_data(path + f"/candidates/{self.id}")
