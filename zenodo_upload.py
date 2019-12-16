@@ -55,14 +55,12 @@ def upload_to_zenodo(ACCESS_TOKEN, is_sandbox, config_file):
     if not os.path.exists(config_file):
         raise FileNotFoundError
 
-    config = None
     with open(config_file) as fin:
         config = json.loads(fin.read())
 
     headers = {"Content-Type": "application/json"}
 
     # Retrieve deposition or create a new one if not specified.
-    deposition_id = None
     if "zenodo" in config \
         and "version" in config["zenodo"]:
         deposition_id = config["zenodo"]["version"]
@@ -127,7 +125,7 @@ def upload_to_zenodo(ACCESS_TOKEN, is_sandbox, config_file):
 def main():
     """Zip a folder or file and upload it to zenodo."""
     args = _get_args()
-    zip_files(args.in_path)
+    #zip_files(args.in_path)
     upload_to_zenodo(args.token, args.sandbox, args.config)
 
 
