@@ -3,6 +3,8 @@ import json
 import os
 import subprocess
 
+import datalad.api
+
 
 DIR_EXCLUDE = [".git", ".datalad"]
 FILE_EXCLUDE = [".DS_Store", ".gitattributes"]
@@ -16,32 +18,32 @@ def _get_args():
     return parser.parse_args()
 
 
-def datalad_download(candidates_file):
-
+def candidate_download(candidates_file):
+    
+    # Verify if folder already exists
     if os.path.exists("candidates"):
-        while answer.lower() not in ["y", "n"]
-            answer = input("A folder \"candidates\" folder already exist. Are you sure you want to continue ?")
+        answer = ""
+        while answer.lower() not in ["y", "n"]:
+            answer = input("A folder \"candidates\" folder already exist. Are you sure you want to continue [Y/n]? ")
 
-        if answer.lower() == "y": system.exit(0)
+        if answer.lower() != "y": system.exit(0)
     else:
         os.mkdir("candidates")
-    
+
+    # Download data from each candidate
     with open(candidates_file) as fin:
         ids = fin.read().split()
 
-    # Download data from each candidate
+    os.chdir("candidates")
     pwd = os.getcwd()
     for id_ in ids:
-        subprocess.run([
-            f"datlad create candidates/{id_}",
-        ])
-        os.chdir(os.path.join(pwd, f"candidates/{id_}"))
-        subprocess.run([
-            f"datalad crawl-init --template=loris-candidate-api url=https://loris.concordia.ca/api/v0.0.2/candidates/{id_}",
-            f"datalad crawl",
-        ])
+        if not os.path.exists(id_):
+            datalad.api.create(id_)
+        os.chdir(id_)
+        datalad.api.crawl_init(save=True, template="loris-candidate-api", args={"url": f"https://loris.concordia.ca/api/v0.0.2/candidates/{id_}"})
+        datalad.api.crawl()
         os.chdir(pwd)       
 
 if __name__ == "__main__":
     args = _get_args()
-    datalad_download(args.candidates)
+    candidate_download(args.candidates)
