@@ -7,7 +7,7 @@ import requests
 
 
 DIR_EXCLUDE = [".git", ".datalad"]
-FILE_EXCLUDE = [".DS_Store", ".gitattributes"]
+FILE_EXCLUDE = [".gitattributes"]
 
 
 def _get_args():
@@ -37,6 +37,7 @@ def zip_files(in_path):
 
             elif os.path.isdir(in_path):
                 for dirpath, dirnames, filenames in os.walk(in_path):
+
                     if any(map(lambda x: x in dirpath, DIR_EXCLUDE)):
                         continue
                     for filename in filenames:
