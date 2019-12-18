@@ -67,7 +67,7 @@ def upload_to_zenodo(ACCESS_TOKEN, is_sandbox, config_file):
         deposition_id = config["zenodo"]["version"]
     else:
         r = requests.post(
-            f"https://{sandbox}zenodo.org/api/deposit/depositions",
+            "https://{}zenodo.org/api/deposit/depositions".format(sandbox),
             params={"access_token": ACCESS_TOKEN},
             json={},
             headers=headers,
@@ -78,7 +78,7 @@ def upload_to_zenodo(ACCESS_TOKEN, is_sandbox, config_file):
     data = {"name": "data.zip"}
     with open("data.zip", "rb") as fin:
         r = requests.post(
-            f"https://{sandbox}zenodo.org/api/deposit/depositions/%s/files" % deposition_id,
+            "https://{}zenodo.org/api/deposit/depositions/{}/files".format(sandbox, deposition_id),
             params={"access_token": ACCESS_TOKEN},
             data=data,
             files={"file": fin},
@@ -109,7 +109,7 @@ def upload_to_zenodo(ACCESS_TOKEN, is_sandbox, config_file):
 
     # Upload metadata
     r = requests.put(
-        f"https://{sandbox}zenodo.org/api/deposit/depositions/%s" % deposition_id,
+        "https://{}zenodo.org/api/deposit/depositions/{}".format(sandbox, deposition_id),
         params={"access_token": ACCESS_TOKEN},
         data=json.dumps(data),
         headers=headers,
@@ -117,8 +117,7 @@ def upload_to_zenodo(ACCESS_TOKEN, is_sandbox, config_file):
 
     # Publish
     r = requests.post(
-        f"https://{sandbox}zenodo.org/api/deposit/depositions/%s/actions/publish"
-        % deposition_id,
+        "https://{}zenodo.org/api/deposit/depositions/{}/actions/publish".format(sandbox, deposition_id),
         params={"access_token": ACCESS_TOKEN},
     )
 
@@ -127,7 +126,7 @@ def main():
     """Zip a folder or file and upload it to zenodo."""
     args = _get_args()
     zip_files(args.in_path)
-    #upload_to_zenodo(args.token, args.sandbox, args.config)
+    upload_to_zenodo(args.token, args.sandbox, args.config)
 
 
 if __name__ == "__main__":
