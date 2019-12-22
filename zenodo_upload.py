@@ -28,10 +28,9 @@ def _get_args():
 def zip_files(in_path):
     with ZipFile("data.zip", "w") as myzip:
 
-        # Verify that file exist
         if os.path.exists(in_path):
 
-            # Check if input path is a file or folder
+            # Handle file and folder seperately
             if os.path.isfile(in_path):
                 myzip.write(in_path)
 
@@ -61,10 +60,38 @@ def upload_to_zenodo(ACCESS_TOKEN, is_sandbox, config_file):
 
     headers = {"Content-Type": "application/json"}
 
-    # Retrieve deposition or create a new one if not specified.
-    if "zenodo" in config \
-        and "version" in config["zenodo"]:
+    # Update deposition or create a new one if not specified.
+    if "zenodo" in config and "version" in config["zenodo"]:
         deposition_id = config["zenodo"]["version"]
+        r = requests.post(
+            "https://{}zenodo.org/api/deposit/depositions/{}/actions/newversion".format(
+                sandbox, deposition_id
+            ),
+            params={"access_token": ACCESS_TOKEN},
+        )
+
+        latest_draft = r.json()["links"]["latest_draft"]
+        r = requests.get(latest_draft, params={"access_token": ACCESS_TOKEN})
+        deposition_id = latest_draft.split("/")[-1]
+
+        # Delete files from previous deposition.
+        res = requests.get(
+            "https://{}zenodo.org/api/deposit/depositions/{}/files".format(
+                sandbox, deposition_id
+            ),
+            params={"access_token": ACCESS_TOKEN},
+        )
+
+        files = res.json()
+        for file_ in files:
+            file_id = file_["id"]
+            requests.delete(
+                "https://{}zenodo.org/api/deposit/depositions/{}/files/{}".format(
+                    sandbox, deposition_id, file_id
+                ),
+                params={"access_token": ACCESS_TOKEN},
+            )
+
     else:
         r = requests.post(
             "https://{}zenodo.org/api/deposit/depositions".format(sandbox),
@@ -74,50 +101,55 @@ def upload_to_zenodo(ACCESS_TOKEN, is_sandbox, config_file):
         )
         deposition_id = r.json()["id"]
 
-    # Update file in deposition.
-    data = {"name": "data.zip"}
+    # Upload file in new deposition.
+    bucket_url = r.json()["links"]["bucket"]
     with open("data.zip", "rb") as fin:
-        r = requests.post(
-            "https://{}zenodo.org/api/deposit/depositions/{}/files".format(sandbox, deposition_id),
-            params={"access_token": ACCESS_TOKEN},
-            data=data,
-            files={"file": fin},
+        r = requests.put(
+            bucket_url + "/data.zip", data=fin, params={"access_token": ACCESS_TOKEN},
         )
 
+    # Populate metadata fields.
     data = {
         "metadata": {
             "title": config["title"],
             "upload_type": "dataset",
             "description": config["description"],
             "creators": [
-                    {k:v for k, v in creator.items() if k in ["name", "affiliation", "orcid", "gnd"]}
-                        for creator in config["creators"]
-                ],
+                {
+                    k: v
+                    for k, v in creator.items()
+                    if k in ["name", "affiliation", "orcid", "gnd"]
+                }
+                for creator in config["creators"]
+            ],
             "access_right": "restricted",
-            "access_conditions": " ".join([
-                    license["name"] for license in config["licenses"]
-                ]),
-            "keywords": ["canadian-open-neuroscience-platform",
-                        *[kw["value"] for kw in config["keywords"]]
-                    ],
+            "access_conditions": " ".join(
+                [license["name"] for license in config["licenses"]]
+            ),
+            "keywords": [
+                "canadian-open-neuroscience-platform",
+                *[kw["value"] for kw in config["keywords"]],
+            ],
         }
     }
 
-    # Check or DOI
     if "doi" in config:
         data["metadata"].update({"doi": config["doi"]})
 
-    # Upload metadata
     r = requests.put(
-        "https://{}zenodo.org/api/deposit/depositions/{}".format(sandbox, deposition_id),
+        "https://{}zenodo.org/api/deposit/depositions/{}".format(
+            sandbox, deposition_id
+        ),
         params={"access_token": ACCESS_TOKEN},
         data=json.dumps(data),
         headers=headers,
     )
 
-    # Publish
+    # Publish new depostion.
     r = requests.post(
-        "https://{}zenodo.org/api/deposit/depositions/{}/actions/publish".format(sandbox, deposition_id),
+        "https://{}zenodo.org/api/deposit/depositions/{}/actions/publish".format(
+            sandbox, deposition_id
+        ),
         params={"access_token": ACCESS_TOKEN},
     )
 
