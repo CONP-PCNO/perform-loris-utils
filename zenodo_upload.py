@@ -15,12 +15,18 @@ def _get_args():
     parser.add_argument(
         "in_path", type=str, help="Path to file or folder to upload.",
     )
-    parser.add_argument("metadata", type=str, help="Path to a DATS.json file containing zenodo metadata.")
+    parser.add_argument(
+        "metadata",
+        type=str,
+        help="Path to a DATS.json file containing zenodo metadata.",
+    )
     parser.add_argument(
         "token", type=str, help="Zenodo token.",
     )
     parser.add_argument(
-        "--sandbox", action="store_true", help="Flag to do a test upload on Zenodo sandbox.",
+        "--sandbox",
+        action="store_true",
+        help="Flag to do a test upload on Zenodo sandbox.",
     )
     return parser.parse_args()
 

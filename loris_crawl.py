@@ -20,7 +20,11 @@ def _get_args():
         type=str,
         help="Path to file holding a list of candidates ID to upload on Zenodo.",
     )
-    parser.add_argument("--batch", action="store_true", help="Bypass confirmation if a \"candidates\" folder alrady exist.")
+    parser.add_argument(
+        "--batch",
+        action="store_true",
+        help='Bypass confirmation if a "candidates" folder alrady exist.',
+    )
     return parser.parse_args()
 
 
@@ -29,13 +33,14 @@ def candidate_download(candidates_file):
     # Verify if folder already exists
     if os.path.exists("candidates"):
         answer = ""
-        while not args.batch and answer.lower() not in ["y", "n"]:
-            answer = input(
-                'A folder "candidates" folder already exist. Are you sure you want to continue [Y/n] ? '
-            )
+        if not args.batch:
+            while answer.lower() not in ["y", "n"]:
+                answer = input(
+                    'A folder "candidates" folder already exist. Are you sure you want to continue [Y/n] ? '
+                )
 
-        if answer.lower() != "y":
-            system.exit(0)
+            if answer.lower() != "y":
+                system.exit(0)
     else:
         os.mkdir("candidates")
 
