@@ -12,14 +12,15 @@ FILE_EXCLUDE = [".DS_Store", ".gitattributes"]
 
 def _get_args():
     parser = argparse.ArgumentParser(
-        description="Datalad crawler for LORIS file uploader"
+        description="Datalad crawler for LORIS file uploader."
     )
-    parser.add_argument("loris_url", type=str, help="URL of a LORIS Candidate API")
+    parser.add_argument("loris_url", type=str, help="URL of a LORIS Candidate API.")
     parser.add_argument(
         "candidates",
         type=str,
         help="Path to file holding a list of candidates ID to upload on Zenodo.",
     )
+    parser.add_argument("--batch", action=store_true, help="Bypass confirmation if a \"candidates\" folder alrady exist.")
     return parser.parse_args()
 
 
@@ -28,9 +29,9 @@ def candidate_download(candidates_file):
     # Verify if folder already exists
     if os.path.exists("candidates"):
         answer = ""
-        while answer.lower() not in ["y", "n"]:
+        while not args.batch and answer.lower() not in ["y", "n"]:
             answer = input(
-                'A folder "candidates" folder already exist. Are you sure you want to continue [Y/n]? '
+                'A folder "candidates" folder already exist. Are you sure you want to continue [Y/n] ? '
             )
 
         if answer.lower() != "y":
