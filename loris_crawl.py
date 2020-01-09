@@ -20,7 +20,7 @@ def _get_args():
         type=str,
         help="Path to file holding a list of candidates ID to upload on Zenodo.",
     )
-    parser.add_argument("--batch", action=store_true, help="Bypass confirmation if a \"candidates\" folder alrady exist.")
+    parser.add_argument("--batch", action="store_true", help="Bypass confirmation if a \"candidates\" folder alrady exist.")
     return parser.parse_args()
 
 
