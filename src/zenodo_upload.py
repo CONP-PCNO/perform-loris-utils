@@ -175,7 +175,7 @@ def main():
     """Zip a folder or file and upload it to zenodo."""
     args = _get_args()
     zip_files(args.in_path, args.metadata)
-    # upload_to_zenodo(args.token, args.sandbox, args.metadata)
+    upload_to_zenodo(args.token, args.sandbox, args.metadata)
 
 
 if __name__ == "__main__":
