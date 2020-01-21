@@ -1,5 +1,7 @@
 # loris2zenodo: A tool to crawl a loris database by candidates and store the data on Zenodo
 
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
 ## Requirements:
 - Install Docker
 - [Create a Zenodo token](https://www.zenodo.org/account/settings/applications/tokens/new/)
@@ -42,4 +44,4 @@ It must contain the following fields:
 
 **zenodo_token:** Authentification token created from your Zenodo account.
 
-**--sandbox:** This flag allows to do test upload on the Zenodo sandbox. Note that you will need a authentification token from [Zenodo sandbox](https://sandbox.zenodo.org/account/settings/applications/tokens/new/).
+**--sandbox (optional):** This flag allows to do test upload on the Zenodo sandbox. Note that you will need a authentification token from [Zenodo sandbox](https://sandbox.zenodo.org/account/settings/applications/tokens/new/).
