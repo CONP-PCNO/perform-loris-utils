@@ -117,16 +117,13 @@ def upload_to_zenodo(ACCESS_TOKEN, is_sandbox, config_file):
         )
 
     # Validate metadata fields
-    if "title" not in config \
-        or "description" not in config \
-        or "creators" not in config:
+    if "title" not in config or "description" not in config or "creators" not in config:
         raise ValueError
-    
+
     if "licenses" not in config:
         config["licenses"] = {}
     if "keywords" not in config:
         config["keywords"] = {}
-
 
     # Populate metadata fields.
     data = {
@@ -178,7 +175,7 @@ def main():
     """Zip a folder or file and upload it to zenodo."""
     args = _get_args()
     zip_files(args.in_path, args.metadata)
-    #upload_to_zenodo(args.token, args.sandbox, args.metadata)
+    # upload_to_zenodo(args.token, args.sandbox, args.metadata)
 
 
 if __name__ == "__main__":
