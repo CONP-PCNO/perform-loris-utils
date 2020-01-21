@@ -31,7 +31,7 @@ def _get_args():
     return parser.parse_args()
 
 
-def zip_files(in_path):
+def zip_files(in_path, metadata):
     with ZipFile("data.zip", "w") as myzip:
 
         if os.path.exists(in_path):
@@ -51,6 +51,8 @@ def zip_files(in_path):
                         myzip.write(os.path.join(dirpath, filename))
             else:
                 raise ValueError
+            myzip.write(metadata, os.path.basename(metadata))
+
         else:
             raise FileNotFoundError
 
@@ -163,8 +165,8 @@ def upload_to_zenodo(ACCESS_TOKEN, is_sandbox, config_file):
 def main():
     """Zip a folder or file and upload it to zenodo."""
     args = _get_args()
-    zip_files(args.in_path)
-    upload_to_zenodo(args.token, args.sandbox, args.config)
+    zip_files(args.in_path, args.metadata)
+    #upload_to_zenodo(args.token, args.sandbox, args.metadata)
 
 
 if __name__ == "__main__":

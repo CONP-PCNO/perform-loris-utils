@@ -16,9 +16,9 @@ WORKDIR /datalad-crawler
 RUN git checkout 73b15e6254ff0c6bfb01ae490d7c3cadb759c124 && \
     python -m pip install -e .
 
-COPY loris_crawl.py /app/src/loris_crawl.py
-COPY zenodo_upload.py /app/src/zenodo_upload.py
-COPY run.sh /app/src/run.sh
+COPY src/loris_crawl.py /app/src/loris_crawl.py
+COPY src/zenodo_upload.py /app/src/zenodo_upload.py
+COPY src/run.sh /app/src/run.sh
 
 WORKDIR /app
 
