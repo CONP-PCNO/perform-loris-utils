@@ -116,6 +116,18 @@ def upload_to_zenodo(ACCESS_TOKEN, is_sandbox, config_file):
             bucket_url + "/data.zip", data=fin, params={"access_token": ACCESS_TOKEN},
         )
 
+    # Validate metadata fields
+    if "title" not in config \
+        or "description" not in config \
+        or "creators" not in config:
+        raise ValueError
+    
+    if "licenses" not in config:
+        config["licenses"] = {}
+    if "keywords" not in config:
+        config["keywords"] = {}
+
+
     # Populate metadata fields.
     data = {
         "metadata": {
