@@ -10,6 +10,7 @@
 ```bash
 docker run -it --rm \
   -v $PWD/candidates:/app/candidates \
+  -v $PWD/config:/app/config:ro \
   # Mount Datalad provider configuration here, if needed. See note below.
   mathdugre/loris2zenodo loris_url candidates_file metadata_file zenodo_token [--sandbox]
 ```
