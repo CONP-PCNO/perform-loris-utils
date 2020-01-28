@@ -31,6 +31,73 @@ def _get_args():
     return parser.parse_args()
 
 
+def generate_dats(dats_file, concept_doi, version):
+    with open(dats_file) as fin:
+        metadata = json.load(fin)
+
+    # Dataset stats
+    nb_subjects = len(
+        [
+            dirname
+            for dirname in os.listdir("candidates")
+            if os.path.isdir(os.path.join("candidates", dirname))
+        ]
+    )
+    nb_files = 0
+    data_size = 0
+    for root, dirs, files in os.walk("candidates"):
+        if any(map(lambda x: x in root, DIR_EXCLUDE)):
+            continue
+        for f in files:
+            if any(map(lambda x: x in f, FILE_EXCLUDE + ["DATS.json"])):
+                continue
+            nb_files += 1
+            data_size += os.stat(os.path.join(root, f)).st_size
+    data_size /= 1024 ** 3  # Convert from Bytes to GB
+
+    if "distributions" not in metadata:
+        metadata["distributions"] = []
+        metadata["distributions"].append(
+            {"size": f"{data_size:.2f}", "unit": {"value": "GB"}}
+        )
+    else:
+        for dist in metadata["distributions"]:
+            dist["size"] = f"{data_size:.2f}"
+            dist["unit"] = "GB"
+
+    if "extraProperties" not in metadata:
+        metadata["extraProperties"] = [
+            {"category": "subjects", "values": [{"value": nb_subjects}]},
+            {"category": "subjects", "values": [{"value": nb_subjects}]},
+            {"category": "subjects", "values": [{"value": nb_subjects}]},
+        ]
+    else:
+        property_to_modify = {
+            "CONP_status": "CONP",
+            "files": nb_files,
+            "subjects": nb_subjects,
+        }
+        for extra_property in metadata["extraProperties"]:
+            if extra_property["category"] in property_to_modify:
+                extra_property["values"] = [
+                    {"value": property_to_modify[extra_property["category"]]}
+                ]
+                del property_to_modify[extra_property["category"]]
+
+        for extra_property, value in property_to_modify.items():
+            metadata["extraProperties"].append(
+                {"category": extra_property, "values": [{"value": value}]}
+            )
+
+    # Update zenodo fields
+    metadata["zenodo"] = {}
+    metadata["zenodo"]["concept_doi"] = concept_doi
+    metadata["zenodo"]["version"] = version
+
+    with open("candidates/DATS.json", "w") as fout:
+        json.dump(metadata, fout, indent=4)
+
+
 def zip_files(in_path, metadata):
     with ZipFile("data.zip", "w") as myzip:
 
@@ -51,7 +118,6 @@ def zip_files(in_path, metadata):
                         myzip.write(os.path.join(dirpath, filename))
             else:
                 raise ValueError
-            myzip.write(metadata, os.path.basename(metadata))
 
         else:
             raise FileNotFoundError
@@ -108,8 +174,12 @@ def upload_to_zenodo(ACCESS_TOKEN, is_sandbox, config_file):
             headers=headers,
         )
         deposition_id = r.json()["id"]
+    concept_doi = r.json()["conceptrecid"]
 
     # Upload file in new deposition.
+    generate_dats(config_file, concept_doi, deposition_id)
+    zip_files("candidates", config_file)
+
     bucket_url = r.json()["links"]["bucket"]
     with open("data.zip", "rb") as fin:
         r = requests.put(
@@ -174,7 +244,6 @@ def upload_to_zenodo(ACCESS_TOKEN, is_sandbox, config_file):
 def main():
     """Zip a folder or file and upload it to zenodo."""
     args = _get_args()
-    zip_files(args.in_path, args.metadata)
     upload_to_zenodo(args.token, args.sandbox, args.metadata)
 
 
