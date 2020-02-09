@@ -67,8 +67,8 @@ def generate_dats(dats_file, concept_doi, version):
 
     if "extraProperties" not in metadata:
         metadata["extraProperties"] = [
-            {"category": "subjects", "values": [{"value": nb_subjects}]},
-            {"category": "subjects", "values": [{"value": nb_subjects}]},
+            {"category": "CONP_status", "values": [{"value": "CONP"}]},
+            {"category": "files", "values": [{"value": nb_files}]},
             {"category": "subjects", "values": [{"value": nb_subjects}]},
         ]
     else:
