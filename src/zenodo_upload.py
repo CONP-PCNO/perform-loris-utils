@@ -6,9 +6,9 @@ from zipfile import ZipFile
 import requests
 
 
-DIR_EXCLUDE = [".git", ".datalad"]
-FILE_EXCLUDE = [".gitattributes"]
-
+EXCLUDED_DIRS = [".git", ".datalad"]
+EXCLUDED_FILES = [".gitattributes"]
+CONP_FILES = ["DATS.json", "logo.png"]
 
 def _get_args():
     parser = argparse.ArgumentParser(description="Zenodo file uploader.")
@@ -31,7 +31,7 @@ def _get_args():
     return parser.parse_args()
 
 
-def generate_dats(dats_file, concept_doi, version):
+def generate_dats(dats_file, concept_doi, version, in_path):
     with open(dats_file) as fin:
         metadata = json.load(fin)
 
@@ -39,20 +39,20 @@ def generate_dats(dats_file, concept_doi, version):
     nb_subjects = len(
         [
             dirname
-            for dirname in os.listdir("candidates")
-            if os.path.isdir(os.path.join("candidates", dirname))
+            for dirname in os.listdir(in_path)
+            if os.path.isdir(os.path.join(in_path, dirname))
         ]
     )
     nb_files = 0
     data_size = 0
-    for root, dirs, files in os.walk("candidates"):
-        if any(map(lambda x: x in root, DIR_EXCLUDE)):
+    for root, dirs, files in os.walk(in_path):
+        if any(map(lambda x: x in root, EXCLUDED_DIRS)):
             continue
-        for f in files:
-            if any(map(lambda x: x in f, FILE_EXCLUDE + ["DATS.json"])):
+        for name in files:
+            if any(map(lambda x: x in name, EXCLUDED_FILES + CONP_FILES)):
                 continue
             nb_files += 1
-            data_size += os.stat(os.path.join(root, f)).st_size
+            data_size += os.stat(os.path.join(root, name)).st_size
     data_size /= 1024 ** 3  # Convert from Bytes to GB
 
     if "distributions" not in metadata:
@@ -94,11 +94,11 @@ def generate_dats(dats_file, concept_doi, version):
     metadata["zenodo"]["concept_doi"] = concept_doi
     metadata["zenodo"]["version"] = version
 
-    with open("candidates/DATS.json", "w") as fout:
+    with open(in_path + "/DATS.json", "w") as fout:
         json.dump(metadata, fout, indent=4)
 
 
-def zip_files(in_path, metadata):
+def zip_files(in_path):
     with ZipFile("data.zip", "w") as myzip:
 
         if os.path.exists(in_path):
@@ -108,14 +108,18 @@ def zip_files(in_path, metadata):
                 myzip.write(in_path)
 
             elif os.path.isdir(in_path):
-                for dirpath, dirnames, filenames in os.walk(in_path):
-
-                    if any(map(lambda x: x in dirpath, DIR_EXCLUDE)):
+                for root, dirs, files in os.walk(in_path):
+                    if any(map(lambda x: x in root, EXCLUDED_DIRS)):
                         continue
-                    for filename in filenames:
-                        if any(map(lambda x: x in filename, FILE_EXCLUDE)):
+                    for name in files:
+                        if any(map(lambda x: x in name, EXCLUDED_FILES)):
                             continue
-                        myzip.write(os.path.join(dirpath, filename))
+
+                        # Zip files at root if they are required for CONP protal.
+                        if any(map(lambda x: x in name, CONP_FILES)):
+                            myzip.write(os.path.join(root, name), name)
+                        else:
+                            myzip.write(os.path.join(root, name))
             else:
                 raise ValueError
 
@@ -123,7 +127,7 @@ def zip_files(in_path, metadata):
             raise FileNotFoundError
 
 
-def upload_to_zenodo(ACCESS_TOKEN, is_sandbox, config_file):
+def upload_to_zenodo(ACCESS_TOKEN, is_sandbox, config_file, in_path):
     sandbox = "sandbox." if is_sandbox else ""
 
     if not os.path.exists(config_file):
@@ -177,8 +181,8 @@ def upload_to_zenodo(ACCESS_TOKEN, is_sandbox, config_file):
     concept_doi = r.json()["conceptrecid"]
 
     # Upload file in new deposition.
-    generate_dats(config_file, concept_doi, deposition_id)
-    zip_files("candidates", config_file)
+    generate_dats(config_file, concept_doi, deposition_id, in_path)
+    zip_files(in_path)
 
     bucket_url = r.json()["links"]["bucket"]
     with open("data.zip", "rb") as fin:
@@ -244,7 +248,7 @@ def upload_to_zenodo(ACCESS_TOKEN, is_sandbox, config_file):
 def main():
     """Zip a folder or file and upload it to zenodo."""
     args = _get_args()
-    upload_to_zenodo(args.token, args.sandbox, args.metadata)
+    upload_to_zenodo(args.token, args.sandbox, args.metadata, args.in_path)
 
 
 if __name__ == "__main__":
