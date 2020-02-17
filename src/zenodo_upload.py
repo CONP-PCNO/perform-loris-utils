@@ -25,6 +25,9 @@ def _get_args():
         "token", type=str, help="Zenodo token.",
     )
     parser.add_argument(
+        "--conceptdoi", nargs='?', type=str, help="Zenodo dataset concept DOI.",
+    )
+    parser.add_argument(
         "--sandbox",
         action="store_true",
         help="Flag to do a test upload on Zenodo sandbox.",
@@ -127,7 +130,7 @@ def zip_files(in_path):
             raise FileNotFoundError
 
 
-def upload_to_zenodo(ACCESS_TOKEN, is_sandbox, config_file, in_path):
+def upload_to_zenodo(config_file, in_path, ACCESS_TOKEN, concept_doi, is_sandbox):
     sandbox = "sandbox." if is_sandbox else ""
 
     if not os.path.exists(config_file):
@@ -139,8 +142,8 @@ def upload_to_zenodo(ACCESS_TOKEN, is_sandbox, config_file, in_path):
     headers = {"Content-Type": "application/json"}
 
     # Update deposition or create a new one if not specified.
-    if "zenodo" in config and "version" in config["zenodo"]:
-        deposition_id = config["zenodo"]["version"]
+    if concept_doi:
+        deposition_id = concept_doi
         r = requests.post(
             "https://{}zenodo.org/api/deposit/depositions/{}/actions/newversion".format(
                 sandbox, deposition_id
@@ -248,7 +251,7 @@ def upload_to_zenodo(ACCESS_TOKEN, is_sandbox, config_file, in_path):
 def main():
     """Zip a folder or file and upload it to zenodo."""
     args = _get_args()
-    upload_to_zenodo(args.token, args.sandbox, args.metadata, args.in_path)
+    upload_to_zenodo(args.metadata, args.in_path, args.token, args.conceptdoi, args.sandbox)
 
 
 if __name__ == "__main__":
