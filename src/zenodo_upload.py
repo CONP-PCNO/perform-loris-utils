@@ -31,7 +31,7 @@ def _get_args():
     return parser.parse_args()
 
 
-def generate_dats(dats_file, concept_doi, version, in_path):
+def generate_dats(dats_file, in_path):
     with open(dats_file) as fin:
         metadata = json.load(fin)
 
@@ -88,11 +88,6 @@ def generate_dats(dats_file, concept_doi, version, in_path):
             metadata["extraProperties"].append(
                 {"category": extra_property, "values": [{"value": value}]}
             )
-
-    # Update zenodo fields
-    metadata["zenodo"] = {}
-    metadata["zenodo"]["concept_doi"] = concept_doi
-    metadata["zenodo"]["version"] = version
 
     with open(in_path + "/DATS.json", "w") as fout:
         json.dump(metadata, fout, indent=4)
@@ -181,7 +176,7 @@ def upload_to_zenodo(ACCESS_TOKEN, is_sandbox, config_file, in_path):
     concept_doi = r.json()["conceptrecid"]
 
     # Upload file in new deposition.
-    generate_dats(config_file, concept_doi, deposition_id, in_path)
+    generate_dats(config_file, in_path)
     zip_files(in_path)
 
     bucket_url = r.json()["links"]["bucket"]
