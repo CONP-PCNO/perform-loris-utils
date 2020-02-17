@@ -3,6 +3,7 @@ import json
 import os
 from zipfile import ZipFile
 
+import humanize
 import requests
 
 
@@ -53,17 +54,21 @@ def generate_dats(dats_file, in_path):
                 continue
             nb_files += 1
             data_size += os.stat(os.path.join(root, name)).st_size
-    data_size /= 1024 ** 3  # Convert from Bytes to GB
+    
+    # Convert to human readable
+    human_readable = humanize.naturalsize(data_size).split(' ') 
+    data_size = float(human_readable[0])
+    data_unit = human_readable[1]
 
     if "distributions" not in metadata:
         metadata["distributions"] = []
         metadata["distributions"].append(
-            {"size": f"{data_size:.2f}", "unit": {"value": "GB"}}
+            {"size": data_size, "unit": {"value": data_unit}}
         )
     else:
         for dist in metadata["distributions"]:
-            dist["size"] = f"{data_size:.2f}"
-            dist["unit"] = "GB"
+            dist["size"] = data_size
+            dist["unit"] = {"value": data_unit}
 
     if "extraProperties" not in metadata:
         metadata["extraProperties"] = [

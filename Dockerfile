@@ -2,12 +2,13 @@ FROM centos:centos7
 
 RUN yum install -y git && \
     curl -o miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh && \
-    sh miniconda.sh -b -p /miniconda
+    sh miniconda.sh -b -p /miniconda && \
+    rm -rf /var/cache/yum
 
 ENV VIRTUAL_ENV "/miniconda"
 ENV PATH "$VIRTUAL_ENV/bin:$PATH"
 
-RUN python3 -m pip install requests && \
+RUN python3 -m pip install requests humanize && \
     conda install -y -c conda-forge git-annex && \
     git clone -n https://github.com/mathdugre/datalad-crawler.git /datalad-crawler
 
