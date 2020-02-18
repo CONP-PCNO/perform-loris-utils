@@ -11,6 +11,7 @@ EXCLUDED_DIRS = [".git", ".datalad"]
 EXCLUDED_FILES = [".gitattributes"]
 CONP_FILES = ["DATS.json", "logo.png"]
 
+
 def _get_args():
     parser = argparse.ArgumentParser(description="Zenodo file uploader.")
     parser.add_argument(
@@ -25,7 +26,7 @@ def _get_args():
         "token", type=str, help="Zenodo token.",
     )
     parser.add_argument(
-        "--conceptdoi", nargs='?', type=str, help="Zenodo dataset concept DOI.",
+        "--conceptdoi", nargs="?", type=str, help="Zenodo dataset concept DOI.",
     )
     parser.add_argument(
         "--sandbox",
@@ -57,9 +58,9 @@ def generate_dats(dats_file, in_path):
                 continue
             nb_files += 1
             data_size += os.stat(os.path.join(root, name)).st_size
-    
+
     # Convert to human readable
-    human_readable = humanize.naturalsize(data_size).split(' ') 
+    human_readable = humanize.naturalsize(data_size).split(" ")
     data_size = float(human_readable[0])
     data_unit = human_readable[1]
 
@@ -143,7 +144,9 @@ def upload_to_zenodo(config_file, in_path, ACCESS_TOKEN, concept_doi, is_sandbox
 
     # Update deposition or create a new one if not specified.
     if concept_doi:
-        deposition_id = concept_doi
+        # We retrieve the first version of the data set
+        # and it has doi one more than the concept_doi.
+        deposition_id = int(concept_doi) + 1
         r = requests.post(
             "https://{}zenodo.org/api/deposit/depositions/{}/actions/newversion".format(
                 sandbox, deposition_id
@@ -251,7 +254,9 @@ def upload_to_zenodo(config_file, in_path, ACCESS_TOKEN, concept_doi, is_sandbox
 def main():
     """Zip a folder or file and upload it to zenodo."""
     args = _get_args()
-    upload_to_zenodo(args.metadata, args.in_path, args.token, args.conceptdoi, args.sandbox)
+    upload_to_zenodo(
+        args.metadata, args.in_path, args.token, args.conceptdoi, args.sandbox
+    )
 
 
 if __name__ == "__main__":
