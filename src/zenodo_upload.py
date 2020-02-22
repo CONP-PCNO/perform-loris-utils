@@ -36,7 +36,7 @@ def _get_args():
     return parser.parse_args()
 
 
-def generate_dats(dats_file, in_path):
+def generate_dats(dats_file, in_path, concept_doi):
     with open(dats_file) as fin:
         metadata = json.load(fin)
 
@@ -66,12 +66,23 @@ def generate_dats(dats_file, in_path):
     if "distributions" not in metadata:
         metadata["distributions"] = []
         metadata["distributions"].append(
-            {"size": data_size, "unit": {"value": data_unit}}
+            {
+                "size": data_size,
+                "unit": {"value": data_unit},
+                "access": {
+                    "landingPage": "https://zenodo.org/record/" + concept_doi,
+                    "authorizations": [{"value": "restricted"}],
+                },
+            }
         )
     else:
         for dist in metadata["distributions"]:
             dist["size"] = data_size
             dist["unit"] = {"value": data_unit}
+            dist["access"] = {
+                "landingPage": "https://zenodo.org/record/" + concept_doi,
+                "authorizations": [{"value": "restricted"}],
+            }
 
     if "extraProperties" not in metadata:
         metadata["extraProperties"] = [
@@ -186,7 +197,7 @@ def upload_to_zenodo(config_file, in_path, ACCESS_TOKEN, concept_doi, is_sandbox
     concept_doi = r.json()["conceptrecid"]
 
     # Upload file in new deposition.
-    generate_dats(config_file, in_path)
+    generate_dats(config_file, in_path, concept_doi)
     zip_files(in_path)
 
     bucket_url = r.json()["links"]["bucket"]
