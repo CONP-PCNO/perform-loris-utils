@@ -60,9 +60,8 @@ def generate_dats(dats_file, in_path):
             data_size += os.stat(os.path.join(root, name)).st_size
 
     # Convert to human readable
-    human_readable = humanize.naturalsize(data_size).split(" ")
-    data_size = float(human_readable[0])
-    data_unit = human_readable[1]
+    data_size, data_unit = humanize.naturalsize(data_size).split(" ")
+    data_size = float(data_size)
 
     if "distributions" not in metadata:
         metadata["distributions"] = []
